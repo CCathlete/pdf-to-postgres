@@ -1,26 +1,29 @@
 package pdfhandler
 
 import (
-	"fmt"
 	"log"
 	"os"
 
-	"github.com/unidoc/unipdf/v3/model"
+	pdf2txt "github.com/heussd/pdftotext-go"
 )
 
-func ParsePdf(pdfPath string) {
-	file, err := os.Open(pdfPath)
-	if err != nil {
-		log.Fatalf("Failed to open PDF: %v\n", err)
-	}
-	defer file.Close()
-	pdfReader, err := model.NewPdfReader(file)
+func ParsePdf(pdfPath string) []pdf2txt.PdfPage {
+	pdfBytes, err := os.ReadFile(pdfPath)
 	if err != nil {
 		log.Fatalf("Failed to read PDF: %v\n", err)
 	}
-	numPages, err := pdfReader.GetNumPages()
+
+	/*
+		pages = []PdfPage
+		type PdfPage struct{
+			Content string -> page text content
+			Number int -> page number
+		}
+	*/
+	pages, err := pdf2txt.Extract(pdfBytes)
 	if err != nil {
-		log.Fatalf("Failed to retrieve the number of pages: %v\n", err)
+		log.Fatalf("Failed to extract text from pages: %v\n", err)
 	}
-	fmt.Println("The total number of pages is: ", numPages)
+
+	return pages
 }
