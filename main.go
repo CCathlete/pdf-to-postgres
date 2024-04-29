@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	docPath := "Parasitology/1 - Introduction to helminthology.pdf"
+	docPath := "Parasitology/Parasitology_book.pdf"
 	pages := pdf2pg.ParsePdf(docPath)
 	txtPath := strings.Replace(docPath, "pdf", "txt", -1) // -1 means all instances.
 
-	file, err := os.OpenFile(txtPath, os.O_CREATE|os.O_APPEND, 0644)
+	file, err := os.OpenFile(txtPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 	defer func() {
 		err := file.Close()
 		if err != nil {
@@ -24,6 +24,9 @@ func main() {
 	}
 
 	for _, page := range pages {
-		file.WriteString(page.Content)
+		_, err := file.WriteString(page.Content)
+		if err != nil {
+			log.Fatalf("Failed to write to the txt file: %v.", err)
+		}
 	}
 }
