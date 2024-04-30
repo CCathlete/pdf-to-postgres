@@ -1,8 +1,10 @@
 package pdfhandler
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"os/exec"
 
 	pdf2txt "github.com/heussd/pdftotext-go"
 )
@@ -26,4 +28,13 @@ func ParsePdf(pdfPath string) []pdf2txt.PdfPage {
 	}
 
 	return pages
+}
+
+func ConvertToText(pdfPath string) {
+	cmd := exec.Command("bash", "-c", "pdftotext "+pdfPath)
+	stdOutErr, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(stdOutErr)
+		log.Fatalf("Failed to run pdftotext using the path %s, the error was: %v\n", pdfPath, err)
+	}
 }

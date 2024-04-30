@@ -1,17 +1,21 @@
 package main
 
 import (
-	"log"
-	"os"
-	pdf2pg "pdf-to-postgres/pdfHandler"
+	"fmt"
+	pdf2txt "pdf-to-postgres/pdfHandler"
 	"strings"
 )
 
 func main() {
 	docPath := "Parasitology/Parasitology_book.pdf"
-	pages := pdf2pg.ParsePdf(docPath)
 	txtPath := strings.Replace(docPath, "pdf", "txt", -1) // -1 means all instances.
+	pdf2txt.ConvertToText(docPath)
+	fmt.Println("PDF doc was converted to text at path: " + txtPath)
+}
 
+/*
+In case we want to use the golang wrapper of poppler (pdftotext). It seemed to work better from the cli.
+	pages := pdf2txt.ParsePdf(docPath)
 	file, err := os.OpenFile(txtPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 	defer func() {
 		err := file.Close()
@@ -24,9 +28,9 @@ func main() {
 	}
 
 	for _, page := range pages {
-		_, err := file.WriteString(page.Content)
+		_, err := file.WriteString(page.Content + "\n")
 		if err != nil {
 			log.Fatalf("Failed to write to the txt file: %v.", err)
 		}
 	}
-}
+*/
