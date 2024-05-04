@@ -30,7 +30,7 @@ func ConvertToText(pdfPath string) {
 	}
 }
 
-func extractParasitesInfo(txtPath string) (output []ParasiteInfo) {
+func ExtractParasitesInfo(txtPath string) (output []ParasiteInfo) {
 	txtBytes, err := os.ReadFile(txtPath)
 	if err != nil {
 		log.Fatalf("Failed to read txt document: %v\n", err)

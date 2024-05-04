@@ -11,6 +11,8 @@ func main() {
 	txtPath := strings.Replace(docPath, "pdf", "txt", -1) // -1 means all instances.
 	pdf2txt.ConvertToText(docPath)
 	fmt.Println("PDF doc was converted to text at path: " + txtPath)
+	parasiteInfo := pdf2txt.ExtractParasitesInfo(txtPath)
+	fmt.Printf("The info: %v\n", parasiteInfo)
 }
 
 /*
