@@ -1,18 +1,29 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	pdf2txt "pdf-to-postgres/pdfHandler"
+	ymlH "pdf-to-postgres/yamlHandler"
 	"strings"
 )
 
 func main() {
 	docPath := "Parasitology/Parasitology_book.pdf"
 	txtPath := strings.Replace(docPath, "pdf", "txt", -1) // -1 means all instances.
-	pdf2txt.ConvertToText(docPath)
-	fmt.Println("PDF doc was converted to text at path: " + txtPath)
-	parasiteInfo := pdf2txt.ExtractParasitesInfo(txtPath)
-	fmt.Printf("The info: %v\n", parasiteInfo)
+	if _, err := os.Stat(txtPath); errors.Is(err, os.ErrNotExist) {
+		pdf2txt.ConvertToText(docPath)
+		fmt.Println("PDF doc was converted to text at path: " + txtPath)
+		parasiteInfo := pdf2txt.ExtractParasitesInfo(txtPath)
+		fmt.Printf("The info: %v\n", parasiteInfo)
+	} else {
+		fmt.Println("The text file exists.")
+	}
+
+	yamlPath := "config.yaml"
+	configMap := ymlH.ParseYaml(yamlPath)
+	fmt.Println(configMap)
 }
 
 /*
