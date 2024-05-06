@@ -23,7 +23,10 @@ func main() {
 
 	yamlPath := "config.yaml"
 	configMap := ymlH.ParseYaml(yamlPath)
-	fmt.Println(configMap)
+	fmt.Printf("Our config is: %v\n", configMap)
+
+	dbName := ymlH.GetDbName(yamlPath)
+	fmt.Printf("Our DB name is: %s\n", dbName)
 }
 
 /*
