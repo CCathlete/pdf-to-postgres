@@ -1,16 +1,18 @@
-package dbhandler
+package dbHandler
 
 import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os/exec"
 
-	_ "github.com/jackc/pgx"
+	_ "github.com/lib/pq"
 )
 
-func DbInit(dbInfo map[string]interface{}) *sql.DB {
+func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
+	//Creating a connection withouot a specific DB.
 	connectionString := fmt.Sprintf("host=%s port=%d"+
-		"user=%s password=%s sslmode=disable",
+		" user=%s password=%s sslmode=disable",
 		dbInfo["host"].(string), dbInfo["port"].(int),
 		dbInfo["user"].(string),
 		dbInfo["password"].(string),
@@ -19,19 +21,25 @@ func DbInit(dbInfo map[string]interface{}) *sql.DB {
 	if err != nil {
 		log.Fatalf("Couldn't connect to posgres server: %v\n", err)
 	}
+
 	dbName := dbInfo["name"].(string)
 
-	//If the database doesn't exist, we create it.
-	query := fmt.Sprintf(
-		`SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS `+
-			`(SELECT FROM pg_database WHERE datname = '%s')\gexec`,
-		dbName, dbName)
-	_, err = dbPointer.Exec(query)
-	if err != nil {
-		log.Fatalf("Couldn't run the query %s: %v\n", query, err)
+	queryString := fmt.Sprintf(
+		`psql -lqt | cut -d \| -f 1 | grep -qw '%s'; echo $?)`,
+		dbName)
+	exitVal, _ := exec.Command(queryString).Output()
+
+	if len(exitVal) != 0 {
+
+		//If the database doesn't exist, we create it.
+		query := fmt.Sprintf(`CREATE DATABASE %s;`, dbName)
+
+		_, err = dbPointer.Exec(query)
+		if err != nil {
+			log.Fatalf("Couldn't run the query %s: %v\n", query, err)
+		}
 	}
 
-	dbPointer.Close()
 	//After making sure we have an existing DB, we create a new connection.
 	connectionString = fmt.Sprintf("host=%s port=%d"+
 		"user=%s password=%s dbname=%s sslmode=disable",

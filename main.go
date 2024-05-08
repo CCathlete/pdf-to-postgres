@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	dbH "pdf-to-postgres/dbHandler"
 	pdf2txt "pdf-to-postgres/pdfHandler"
 	ymlH "pdf-to-postgres/yamlHandler"
 	"strings"
@@ -27,6 +28,9 @@ func main() {
 
 	dbName := ymlH.GetDbName(yamlPath)
 	fmt.Printf("Our DB name is: %s\n", dbName)
+
+	dbInfo := configMap["Database"].(map[interface{}]interface{})
+	dbH.DbInit(dbInfo)
 }
 
 /*
