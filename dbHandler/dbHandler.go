@@ -15,8 +15,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type content pdfhandler.ParasiteInfo
-
 func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 	//Creating a connection withouot a specific DB.
 	connectionString := fmt.Sprintf("host=%s port=%d"+
@@ -120,7 +118,7 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 
 	//After making sure we have an existing DB, we create a new connection.
 	connectionString = fmt.Sprintf("host=%s port=%d"+
-		"user=%s password=%s dbname=%s sslmode=disable",
+		" user=%s password=%s dbname=%s sslmode=disable",
 		dbInfo["host"].(string), dbInfo["port"].(int),
 		dbInfo["user"].(string),
 		dbInfo["password"].(string),
@@ -131,10 +129,27 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 		log.Fatalf("Couldn't connect to posgres server: %v\n", err)
 	}
 
+	CreateTable(dbPointer, dbName)
+
 	return dbPointer
 }
 
-func CreateTable(dbPointer *sql.DB, innerStructure content) {
+func CreateTable(dbPointer *sql.DB, tableName string) {
 	// We want to take the keys of the inner structure and make
 	// them keys in our table.
+	//We assume that we're already connected to the DB.
+	innerStructure := pdfhandler.ParasiteInfo{}
+	innerStructure.Init()
+	query := fmt.Sprintf(
+		"CREATE TABLE %s(\nIndex SERIAL PRIMARY KEY NOT NULL",
+		tableName)
+	for key, _ := range innerStructure {
+		query += fmt.Sprintf(",\n%s TEXT", strings.Replace(key,
+			" ", "_", -1))
+	}
+	query += ");"
+	_, err := dbPointer.Exec(query)
+	if err != nil {
+		log.Fatalf("Couldn't run the query %s: %v\n", query, err)
+	}
 }
