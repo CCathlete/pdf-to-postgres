@@ -8,10 +8,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	pdfhandler "pdf-to-postgres/pdfHandler"
+	"strings"
 	"sync"
 
 	_ "github.com/lib/pq"
 )
+
+type content pdfhandler.ParasiteInfo
 
 func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 	//Creating a connection withouot a specific DB.
@@ -27,6 +31,7 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 	}
 
 	dbName := dbInfo["name"].(string)
+	dbName = strings.ToLower(dbName)
 
 	reader1, writer1, _ := os.Pipe()
 	reader2, writer2, _ := os.Pipe()
@@ -63,10 +68,6 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 			log.Fatalf("Issue with closing writer 1: %v\n", err)
 		}
 	}()
-	r1Info, _ := reader1.Stat()
-	content := make([]byte, r1Info.Size())
-	reader1.Read(content)
-	fmt.Printf("%s", content)
 
 	go func() {
 		defer wg.Done()
@@ -90,10 +91,6 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 			log.Fatalf("Issue with closing reader 1: %v\n", err)
 		}
 	}()
-	r2Info, _ := reader2.Stat()
-	content = make([]byte, r2Info.Size())
-	reader2.Read(content)
-	fmt.Printf("%s", content)
 
 	err = cmd3.Run()
 	if err != nil {
@@ -135,4 +132,9 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 	}
 
 	return dbPointer
+}
+
+func CreateTable(dbPointer *sql.DB, innerStructure content) {
+	// We want to take the keys of the inner structure and make
+	// them keys in our table.
 }

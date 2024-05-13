@@ -3,6 +3,7 @@ package pdfhandler
 import (
 	"fmt"
 	"log"
+	"maps"
 	"os"
 	"os/exec"
 	"regexp"
@@ -10,15 +11,20 @@ import (
 	pdf2txt "github.com/heussd/pdftotext-go"
 )
 
-type ParasiteInfo struct {
-	ScientificName string
-	CommonName     string
-	SizeAdult      string
-	SizeEgg        string
-	Importance     string
-	Diagnosis      string
-	Treatment      string
-	Note           string
+type ParasiteInfo map[string]string
+
+func (p *ParasiteInfo) Init() {
+	initialPattern := ParasiteInfo{
+		"Scientific Name": "",
+		"Common Name":     "",
+		"Adult Size":      "",
+		"Egg Size":        "",
+		"Importance":      "",
+		"Diagnosis":       "",
+		"Treatment":       "",
+		"Note":            "",
+	}
+	maps.Copy(*p, initialPattern)
 }
 
 func ConvertToText(pdfPath string) {
@@ -40,7 +46,9 @@ func ExtractParasitesInfo(txtPath string) (output []ParasiteInfo) {
 	re := regexp.MustCompile(pattern)
 	matches := re.FindAllString(txtString, -1)
 	for _, match := range matches {
-		pInfo := ParasiteInfo{Note: match}
+		pInfo := ParasiteInfo{}
+		pInfo.Init()
+		pInfo["Note"] = match
 		output = append(output, pInfo)
 	}
 	return output
