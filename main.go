@@ -16,11 +16,11 @@ func main() {
 	if _, err := os.Stat(txtPath); errors.Is(err, os.ErrNotExist) {
 		pdf2txt.ConvertToText(docPath)
 		fmt.Println("PDF doc was converted to text at path: " + txtPath)
-		parasiteInfo := pdf2txt.ExtractParasitesInfo(txtPath)
-		fmt.Printf("The info: %v\n", parasiteInfo)
+		// fmt.Printf("The info: %v\n", parasites)
 	} else {
 		fmt.Println("The text file exists.")
 	}
+	parasites := pdf2txt.ExtractParasitesInfo(txtPath)
 
 	yamlPath := "config.yaml"
 	configMap := ymlH.ParseYaml(yamlPath)
@@ -30,7 +30,10 @@ func main() {
 	fmt.Printf("Our DB name is: %s\n", dbName)
 
 	dbInfo := configMap["Database"].(map[interface{}]interface{})
-	dbH.DbInit(dbInfo)
+	dbPointer := dbH.DbInit(dbInfo)
+	for _, parasiteInfo := range parasites {
+		dbH.AddToTable(dbPointer, dbName, parasiteInfo)
+	}
 }
 
 /*

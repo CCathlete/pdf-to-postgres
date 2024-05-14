@@ -42,7 +42,7 @@ func ExtractParasitesInfo(txtPath string) (output []ParasiteInfo) {
 		log.Fatalf("Failed to read txt document: %v\n", err)
 	}
 	txtString := string(txtBytes)
-	pattern := `((.*\n*)*)Fig` // prototype pattern, change in the future.
+	pattern := `((.*\n*)*)Fig` //Prototype pattern, change in the future.
 	re := regexp.MustCompile(pattern)
 	matches := re.FindAllString(txtString, -1)
 	for _, match := range matches {

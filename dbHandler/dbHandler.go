@@ -129,7 +129,9 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 		log.Fatalf("Couldn't connect to posgres server: %v\n", err)
 	}
 
-	CreateTable(dbPointer, dbName)
+	if len(exitVal) == 0 {
+		CreateTable(dbPointer, dbName)
+	}
 
 	return dbPointer
 }
@@ -151,5 +153,17 @@ func CreateTable(dbPointer *sql.DB, tableName string) {
 	_, err := dbPointer.Exec(query)
 	if err != nil {
 		log.Fatalf("Couldn't run the query %s: %v\n", query, err)
+	}
+}
+
+func AddToTable(dbPointer *sql.DB, tableName string,
+	entry pdfhandler.ParasiteInfo) {
+	for key, value := range entry {
+		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);",
+			tableName, key, value)
+		_, err := dbPointer.Exec(query)
+		if err != nil {
+			log.Fatalf("Couldn't run the query %s: %v\n", query, err)
+		}
 	}
 }
