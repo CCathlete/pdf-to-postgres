@@ -92,10 +92,10 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 
 	err = cmd3.Run()
 	if err != nil {
-		log.Printf("Issue with running the command %s: %v\n",
+		log.Printf("Issue with running the command %s: %v. Database probably does not exist.\n",
 			cmd3.String(), err)
 	}
-	exitVal := outBuff.String()
+	grepOutput := outBuff.String()
 
 	wg.Wait()
 
@@ -104,8 +104,8 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 		log.Fatalf("Issue with closing reader 2: %v\n", err)
 	}
 
-	fmt.Printf("exitVal: %v", exitVal)
-	if len(exitVal) == 0 {
+	fmt.Printf("grepOutput: %v", grepOutput)
+	if len(grepOutput) == 0 {
 
 		//If the database doesn't exist, we create it.
 		query := fmt.Sprintf(`CREATE DATABASE %s;`, dbName)
@@ -129,7 +129,7 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 		log.Fatalf("Couldn't connect to posgres server: %v\n", err)
 	}
 
-	if len(exitVal) == 0 {
+	if len(grepOutput) == 0 {
 		CreateTable(dbPointer, dbName)
 	}
 
@@ -159,6 +159,7 @@ func CreateTable(dbPointer *sql.DB, tableName string) {
 func AddToTable(dbPointer *sql.DB, tableName string,
 	entry pdfhandler.ParasiteInfo) {
 	for key, value := range entry {
+		key = strings.Replace(key, " ", "_", -1)
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);",
 			tableName, key, value)
 		_, err := dbPointer.Exec(query)
