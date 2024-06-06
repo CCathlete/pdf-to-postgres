@@ -160,7 +160,8 @@ func AddToTable(dbPointer *sql.DB, tableName string,
 	entry pdfhandler.ParasiteInfo) {
 	for key, value := range entry {
 		key = strings.Replace(key, " ", "_", -1)
-		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);",
+		key = strings.ToLower(key)
+		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES ('%s');",
 			tableName, key, value)
 		_, err := dbPointer.Exec(query)
 		if err != nil {
