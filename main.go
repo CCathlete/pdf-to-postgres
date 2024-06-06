@@ -27,6 +27,7 @@ func main() {
 	fmt.Printf("Our config is: %v\n", configMap)
 
 	dbName := ymlH.GetDbName(yamlPath)
+	dbName = strings.ToLower(dbName)
 	fmt.Printf("Our DB name is: %s\n", dbName)
 
 	dbInfo := configMap["Database"].(map[interface{}]interface{})
