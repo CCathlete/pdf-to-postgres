@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	docPath := "Parasitology/Parasitology_book.pdf"
+	docPath := "Parasitology/dummy_parasite.pdf"
 	txtPath := strings.Replace(docPath, "pdf", "txt", -1) // -1 means all instances.
 	if _, err := os.Stat(txtPath); errors.Is(err, os.ErrNotExist) {
 		pdf2txt.ConvertToText(docPath)
