@@ -95,7 +95,14 @@ func processMatchInfo(ppInfo *ParasiteInfo, regexpMatch string) {
 		// Note:
 		// categoryRaw = [entire_match capturing_group_1 capturing_group_2 ...]
 		categoryRaw := re.FindStringSubmatch(regexpMatch)
-		categoryContent := categoryRaw[1]
+
+		var categoryContent string
+		if categoryRaw != nil {
+			categoryContent = categoryRaw[1]
+		} else {
+			categoryContent = ""
+		}
+
 		mapy := *ppInfo // Dereferencing the pointer for assignment
 		mapy[key] = categoryContent
 		*ppInfo = mapy
