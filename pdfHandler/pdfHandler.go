@@ -17,12 +17,10 @@ func (p *ParasiteInfo) Init() {
 	initialPattern := ParasiteInfo{
 		"Scientific Name": "",
 		"Common Name":     "",
-		"Adult Size":      "",
-		"Egg Size":        "",
+		"Size":            "",
 		"Importance":      "",
 		"Diagnosis":       "",
 		"Treatment":       "",
-		"Note":            "",
 	}
 	maps.Copy(*p, initialPattern)
 }
@@ -42,16 +40,66 @@ func ExtractParasitesInfo(txtPath string) (output []ParasiteInfo) {
 		log.Fatalf("Failed to read txt document: %v\n", err)
 	}
 	txtString := string(txtBytes)
-	pattern := `((.*\n*)*)Fig` //Prototype pattern, change in the future.
+	pattern := `((.*\n*)*)Fig` // Catch one parasite. Prototype pattern, change in the future.
 	re := regexp.MustCompile(pattern)
 	matches := re.FindAllString(txtString, -1)
 	for _, match := range matches {
 		pInfo := ParasiteInfo{}
 		pInfo.Init()
-		pInfo["Note"] = match
+		processMatchInfo(&pInfo, match)
 		output = append(output, pInfo)
 	}
 	return output
+}
+
+func processMatchInfo(ppInfo *ParasiteInfo, regexpMatch string) {
+	/*
+		A match is the text with the parasiteInfo keys ("categories") in it.
+		We want ot take the content of each category and put it uner the correct key
+		in ppInfo - pointer to a parasiteInfo variable.
+	*/
+	for key, _ := range *ppInfo {
+		var start, end string
+		body := `((.*|\n)*?)`
+
+		switch key {
+		case "Scientific Name":
+			start = `^`
+			end = `Common`
+
+		case "Common Name":
+			start = key
+			end = `Size`
+
+		case "Size":
+			start = `Common name.*\n`
+			end = `Importance`
+
+		case "Importance":
+			start = key
+			end = `Diagnosis`
+
+		case "Diagnosis":
+			start = key
+			end = `Treatment`
+
+		// Treatment also includes prevention and notes if these
+		// fields exist for this parasite.
+		case "Treatment":
+			start = key
+			body = `((.*|\n)*)` // Without the `prefer fewer`.
+			end = `\n`
+		}
+		pattern := start + body + end
+		re := regexp.MustCompile(pattern)
+		// Note:
+		// categoryRaw = [entire_match capturing_group_1 capturing_group_2 ...]
+		categoryRaw := re.FindStringSubmatch(regexpMatch)
+		categoryContent := categoryRaw[1]
+		mapy := *ppInfo // Dereferencing the pointer for assignment
+		mapy[key] = categoryContent
+		*ppInfo = mapy
+	}
 }
 
 func ParsePdf(pdfPath string) []pdf2txt.PdfPage {
@@ -61,6 +109,7 @@ func ParsePdf(pdfPath string) []pdf2txt.PdfPage {
 	}
 
 	/*
+		Note:
 		pages = []PdfPage
 		type PdfPage struct{
 			Content string -> page text content

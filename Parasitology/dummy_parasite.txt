@@ -1,12 +1,12 @@
-index: 1
-adult_size: 3 mm
-egg_size: 0.5 mm
-importance:
-diagnosis: blabla
-treatment: wash with wamter
-note: none
-scientific_name: dummoae parasitae
-common_name: dummy parasite
+dummoae parasitae
+Common name: dummy parasite
+Size of adult: 3 mm
+Size of egg: 0.5 mm
+Importance:
+Diagnosis: blabla
+Treatment: wash with wamter
+Prevention: stay cleam
+Note: none
 
 Fig
 
