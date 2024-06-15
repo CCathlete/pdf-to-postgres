@@ -15,8 +15,8 @@ type ParasiteInfo map[string]string
 
 func (p *ParasiteInfo) Init() {
 	initialPattern := ParasiteInfo{
-		"Scientific Name": "",
-		"Common Name":     "",
+		"Scientific name": "",
+		"Common name":     "",
 		"Size":            "",
 		"Importance":      "",
 		"Diagnosis":       "",
@@ -63,12 +63,12 @@ func processMatchInfo(ppInfo *ParasiteInfo, regexpMatch string) {
 		body := `((.*|\n)*?)`
 
 		switch key {
-		case "Scientific Name":
+		case "Scientific name":
 			start = `^`
 			end = `Common`
 
-		case "Common Name":
-			start = key
+		case "Common name":
+			start = fmt.Sprintf("%s: ", key)
 			end = `Size`
 
 		case "Size":
@@ -76,17 +76,17 @@ func processMatchInfo(ppInfo *ParasiteInfo, regexpMatch string) {
 			end = `Importance`
 
 		case "Importance":
-			start = key
+			start = fmt.Sprintf("%s: ", key)
 			end = `Diagnosis`
 
 		case "Diagnosis":
-			start = key
+			start = fmt.Sprintf("%s: ", key)
 			end = `Treatment`
 
 		// Treatment also includes prevention and notes if these
 		// fields exist for this parasite.
 		case "Treatment":
-			start = key
+			start = fmt.Sprintf("%s: ", key)
 			body = `((.*|\n)*)` // Without the `prefer fewer`.
 			end = `\n`
 		}

@@ -178,7 +178,7 @@ func AddToTable(dbPointer *sql.DB, tableName string,
 	}
 	// Constructing the query using the keys (columns) and placeholders.
 	// Note: this is where the slices are each joined into one string with ", ".
-	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES ('%s');",
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);",
 		tableName,
 		strings.Join(columns, ", "),
 		strings.Join(placeholders, ", "),
