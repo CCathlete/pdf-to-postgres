@@ -158,14 +158,33 @@ func CreateTable(dbPointer *sql.DB, tableName string) {
 
 func AddToTable(dbPointer *sql.DB, tableName string,
 	entry pdfhandler.ParasiteInfo) {
+	columns := []string{}
+	values := []interface{}{} // Best practice for SQL in Go.
+	placeholders := []string{}
+
 	for key, value := range entry {
+		// Sanitation of the keys before using SQL.
 		key = strings.Replace(key, " ", "_", -1)
 		key = strings.ToLower(key)
-		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES ('%s');",
-			tableName, key, value)
-		_, err := dbPointer.Exec(query)
-		if err != nil {
-			log.Fatalf("Couldn't run the query %s: %v\n", query, err)
-		}
+		// Collecting the column names and the corresponding values.
+		columns = append(columns, key)
+		values = append(values, value)
+	}
+
+	// Collecting placeholders in a slice.
+	for i := 0; i < len(values); i++ {
+		placeholders = append(placeholders,
+			fmt.Sprintf("$%d", i+1))
+	}
+	// Constructing the query using the keys (columns) and placeholders.
+	// Note: this is where the slices are each joined into one string with ", ".
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES ('%s');",
+		tableName,
+		strings.Join(columns, ", "),
+		strings.Join(placeholders, ", "),
+	)
+	_, err := dbPointer.Exec(query, values...)
+	if err != nil {
+		log.Fatalf("Couldn't run the query %s: %v\n", query, err)
 	}
 }
