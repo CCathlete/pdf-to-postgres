@@ -7,8 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	pdf2txt "github.com/heussd/pdftotext-go"
+	license "github.com/unidoc/unipdf/v3/common/license"
+	extractor "github.com/unidoc/unipdf/v3/extractor"
+	model "github.com/unidoc/unipdf/v3/model"
 )
 
 type ParasiteInfo map[string]string
@@ -25,12 +29,74 @@ func (p *ParasiteInfo) Init() {
 	maps.Copy(*p, initialPattern)
 }
 
-func ConvertToText(pdfPath string) {
+func ConvertToText_crap(pdfPath string) {
 	cmd := exec.Command("bash", "-c", "pdftotext "+pdfPath)
 	stdOutErr, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(stdOutErr)
 		log.Fatalf("Failed to run pdftotext using the path %s, the error was: %v\n", pdfPath, err)
+	}
+}
+
+func ConvertToText(pdfPath string) {
+	err := license.SetMeteredKey(os.Getenv(`UNIDOC_LICENSE_API_KEY`))
+	if err != nil {
+		panic(err)
+	}
+	f, err := os.Open(pdfPath)
+	if err != nil {
+		log.Fatalf("Failed to open the file in path %s, the error was: %v\n", pdfPath, err)
+	}
+
+	defer f.Close()
+
+	pdfReader, err := model.NewPdfReader(f)
+	if err != nil {
+		log.Fatalf("Failed to createnannew pdf reader for path %s, the error was: %v\n", pdfPath, err)
+	}
+
+	numPages, err := pdfReader.GetNumPages()
+	if err != nil {
+		log.Fatalf("Failed to get number of pages, the error was: %v\n", err)
+	}
+
+	fmt.Printf("--------------------\n")
+	fmt.Printf("PDF to text extraction:\n")
+	fmt.Printf("--------------------\n")
+	for i := 0; i < numPages; i++ {
+		pageNum := i + 1
+
+		page, err := pdfReader.GetPage(pageNum)
+		if err != nil {
+			log.Fatalf("Failed to get a page pbject for page num %d, the error was: %v\n", pageNum, err)
+		}
+
+		ex, err := extractor.New(page)
+		if err != nil {
+			log.Fatalf("Failed to create a new extractor for page num %d, the error was: %v\n", pageNum, err)
+		}
+
+		text, err := ex.ExtractText()
+		if err != nil {
+			log.Fatalf("Failed to extract text from page num %d, the error was: %v\n", pageNum, err)
+		}
+
+		txtPath := strings.Replace(pdfPath, "pdf", "txt", -1) // -1 means all instances.
+		file, err := os.OpenFile(txtPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0664)
+		if err != nil {
+			log.Fatalf("Failed to a file in path %s, the error was: %v\n", txtPath, err)
+		}
+		defer file.Close()
+
+		_, err = file.WriteString(text)
+		if err != nil {
+			log.Fatalf("Failed to write the text into a txt file, the error was: %v\n", err)
+		}
+
+		// fmt.Println("------------------------------")
+		// fmt.Printf("Page %d:\n", pageNum)
+		// fmt.Printf("\"%s\"\n", text)
+		// fmt.Println("------------------------------")
 	}
 }
 
