@@ -13,9 +13,10 @@ import (
 func main() {
 	// docPath := "Parasitology/dummy_parasite.pdf"
 	docPath := "Parasitology/Parasitology_book.pdf"
+	outputPath := "Parasitology/imageArchive.zip"
 	txtPath := strings.Replace(docPath, "pdf", "txt", -1) // -1 means all instances.
 	if _, err := os.Stat(txtPath); errors.Is(err, os.ErrNotExist) {
-		pdf2txt.ConvertToText(docPath)
+		pdf2txt.ConvertToText(docPath, outputPath)
 		fmt.Println("PDF doc was converted to text at path: " + txtPath)
 	} else {
 		fmt.Println("The text file exists.")

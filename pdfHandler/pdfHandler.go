@@ -1,7 +1,9 @@
 package pdfhandler
 
 import (
+	"archive/zip"
 	"fmt"
+	"image/jpeg"
 	"log"
 	"maps"
 	"os"
@@ -29,7 +31,7 @@ func (p *ParasiteInfo) Init() {
 	maps.Copy(*p, initialPattern)
 }
 
-func ConvertToText_crap(pdfPath string) {
+func ConvertToTextWhenNotScanned(pdfPath string) {
 	cmd := exec.Command("bash", "-c", "pdftotext "+pdfPath)
 	stdOutErr, err := cmd.CombinedOutput()
 	if err != nil {
@@ -38,7 +40,26 @@ func ConvertToText_crap(pdfPath string) {
 	}
 }
 
-func ConvertToText(pdfPath string) {
+func runTesseractOCR(imagepath string) string {
+	tempOutFile := "output" // Tesseract automatically adds .txt
+	cmd := exec.Command("/bin/tesseract", imagepath, tempOutFile)
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("Failed to convert image with tesseract %v\n", err)
+		return ""
+	}
+
+	text, err := os.ReadFile(tempOutFile + ".txt")
+	if err != nil {
+		log.Fatalf("Failed to convert image with tesseract %v\n", err)
+		return ""
+	}
+
+	os.Remove(tempOutFile + ".txt")
+
+	return string(text)
+}
+
+func ConvertToText(pdfPath, outputPath string) {
 	err := license.SetMeteredKey(os.Getenv(`UNIDOC_LICENSE_API_KEY`))
 	if err != nil {
 		panic(err)
@@ -76,21 +97,59 @@ func ConvertToText(pdfPath string) {
 			log.Fatalf("Failed to create a new extractor for page num %d, the error was: %v\n", pageNum, err)
 		}
 
-		text, err := ex.ExtractText()
+		images, err := ex.ExtractPageImages(nil)
 		if err != nil {
-			log.Fatalf("Failed to extract text from page num %d, the error was: %v\n", pageNum, err)
+			log.Fatalf("Failed to extract an image from page num %d, the error was: %v\n",
+				pageNum, err)
 		}
-
-		txtPath := strings.Replace(pdfPath, "pdf", "txt", -1) // -1 means all instances.
-		file, err := os.OpenFile(txtPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0664)
+		// Prepare output archive.
+		zipFile, err := os.Create(outputPath) // A zip "folder" is actually a zip file.
 		if err != nil {
-			log.Fatalf("Failed to a file in path %s, the error was: %v\n", txtPath, err)
+			log.Fatalf("Failed to create a new extractor for page num %d, the error was: %v\n", pageNum, err)
 		}
-		defer file.Close()
+		defer zipFile.Close()
+		zipWriter := zip.NewWriter(zipFile)
 
-		_, err = file.WriteString(text)
-		if err != nil {
-			log.Fatalf("Failed to write the text into a txt file, the error was: %v\n", err)
+		for j, image := range images.Images {
+			// Extracting text from the am image with OCR.
+			imagePath := fmt.Sprintf("page_%d_image_%d.jpg", i, j)
+
+			gimg, err := image.Image.ToGoImage()
+			if err != nil {
+				log.Fatalf("Failed to convert to Go image %d on page %d: %v", j, i, err)
+			}
+
+			zippedImageFile, err := zipWriter.Create(imagePath)
+			opt := jpeg.Options{Quality: 80}
+			err = jpeg.Encode(zippedImageFile, gimg, &opt)
+			if err != nil {
+				log.Fatalf("Failed to encode image %d on page %d: %v", j, i, err)
+			}
+			defer func() {
+				if err := zipWriter.Close(); err != nil {
+					log.Fatalf("Failed to close the zip writer: %v", err)
+				}
+			}()
+
+			// Adding the text to the txt file.
+			txtPath := strings.Replace(pdfPath, "pdf", "txt", -1) // -1 means all instances.
+			file, err := os.OpenFile(txtPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+			if err != nil {
+				log.Fatalf("Failed to a file in path %s, the error was: %v\n", txtPath, err)
+			}
+			defer file.Close()
+
+			text := runTesseractOCR(imagePath)
+			numOfBits, err := file.WriteString(text)
+			if err != nil {
+				log.Fatalf("Failed to write the text into a txt file, the error was: %v\n", err)
+			} else {
+				fmt.Printf("%d bits were written.\n", numOfBits)
+			}
+
+			if err := file.Sync(); err != nil {
+				log.Fatalf("Failed to sync file: %v", err)
+			}
 		}
 
 		// fmt.Println("------------------------------")
