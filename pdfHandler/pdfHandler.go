@@ -1,7 +1,6 @@
 package pdfhandler
 
 import (
-	"archive/zip"
 	"fmt"
 	"image/jpeg"
 	"log"
@@ -59,7 +58,7 @@ func runTesseractOCR(imagepath string) string {
 	return string(text)
 }
 
-func ConvertToText(pdfPath, outputPath string) {
+func ConvertToText(pdfPath, outputDirPath string) {
 	err := license.SetMeteredKey(os.Getenv(`UNIDOC_LICENSE_API_KEY`))
 	if err != nil {
 		panic(err)
@@ -102,34 +101,25 @@ func ConvertToText(pdfPath, outputPath string) {
 			log.Fatalf("Failed to extract an image from page num %d, the error was: %v\n",
 				pageNum, err)
 		}
-		// Prepare output archive.
-		zipFile, err := os.Create(outputPath) // A zip "folder" is actually a zip file.
-		if err != nil {
-			log.Fatalf("Failed to create a new extractor for page num %d, the error was: %v\n", pageNum, err)
-		}
-		defer zipFile.Close()
-		zipWriter := zip.NewWriter(zipFile)
 
 		for j, image := range images.Images {
 			// Extracting text from the am image with OCR.
-			imagePath := fmt.Sprintf("page_%d_image_%d.jpg", i, j)
+			imagePath := fmt.Sprintf("%s/page_%d_image_%d.jpg", outputDirPath, i, j)
+			imageFile, err := os.Create(imagePath)
+			if err != nil {
+				log.Fatalf("Failed to create a new extractor for page num %d, the error was: %v\n", pageNum, err)
+			}
+			defer imageFile.Close()
 
-			gimg, err := image.Image.ToGoImage()
+			goImage, err := image.Image.ToGoImage()
 			if err != nil {
 				log.Fatalf("Failed to convert to Go image %d on page %d: %v", j, i, err)
 			}
 
-			zippedImageFile, err := zipWriter.Create(imagePath)
-			opt := jpeg.Options{Quality: 80}
-			err = jpeg.Encode(zippedImageFile, gimg, &opt)
+			err = jpeg.Encode(imageFile, goImage, nil)
 			if err != nil {
 				log.Fatalf("Failed to encode image %d on page %d: %v", j, i, err)
 			}
-			defer func() {
-				if err := zipWriter.Close(); err != nil {
-					log.Fatalf("Failed to close the zip writer: %v", err)
-				}
-			}()
 
 			// Adding the text to the txt file.
 			txtPath := strings.Replace(pdfPath, "pdf", "txt", -1) // -1 means all instances.
