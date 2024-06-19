@@ -25,7 +25,7 @@ func ParseYaml(yamlPath string) map[string]interface{} {
 	if err != nil {
 		log.Fatalf("Problem with reading the file in path %s: %v", yamlPath, err)
 	}
-	// Equivalent to make(map[string]interface{})
+	// Similar to make(map[string]interface{} but also initialises it)
 	configMap := map[string]interface{}{}
 	err = yaml.Unmarshal(dataBytes, configMap)
 	if err != nil {

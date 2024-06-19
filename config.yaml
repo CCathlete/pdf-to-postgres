@@ -5,3 +5,18 @@ Database:
   port: 5432
   user: postgres
   password: postgres
+
+Animal names:
+  - Pigs
+  - Dogs
+  - Cats
+  - Cattle, Sheep and Goats
+  - Llamas
+  - Horses
+  - Birds
+  - Ratites
+  - Laboratory animals
+  - Wildlife
+  - Marine Mammals
+  - Reptiles
+  - Humans

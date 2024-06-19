@@ -30,6 +30,8 @@ func main() {
 	configMap := ymlH.ParseYaml(yamlPath)
 	fmt.Printf("Our config is: %v\n", configMap)
 
+	// animalNames := configMap["Animal names"].([]string)
+
 	dbName := ymlH.GetDbName(yamlPath)
 	dbName = strings.ToLower(dbName)
 	fmt.Printf("Our DB name is: %s\n", dbName)
