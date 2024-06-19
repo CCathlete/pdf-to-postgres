@@ -15,7 +15,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
+func DbInit(dbInfo map[interface{}]interface{}, animalNames []string) *sql.DB {
 	//Creating a connection withouot a specific DB.
 	connectionString := fmt.Sprintf("host=%s port=%d"+
 		" user=%s password=%s sslmode=disable",
@@ -129,8 +129,11 @@ func DbInit(dbInfo map[interface{}]interface{}) *sql.DB {
 		log.Fatalf("Couldn't connect to posgres server: %v\n", err)
 	}
 
+	// If the db doesn't exist we create all of the inner tables (one for each animal).
 	if len(grepOutput) == 0 {
-		CreateTable(dbPointer, dbName)
+		for _, animal := range animalNames {
+			CreateTable(dbPointer, animal)
+		}
 	}
 
 	return dbPointer

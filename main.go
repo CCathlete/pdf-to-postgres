@@ -24,22 +24,25 @@ func main() {
 	} else {
 		fmt.Println("The text file exists.")
 	}
-	parasites := pdf2txt.ExtractParasitesInfo(txtPath)
 
 	yamlPath := "config.yaml"
 	configMap := ymlH.ParseYaml(yamlPath)
 	fmt.Printf("Our config is: %v\n", configMap)
 
-	// animalNames := configMap["Animal names"].([]string)
+	animalNames := configMap["Animal names"].([]string)
+	parasites := pdf2txt.ExtractParasitesInfo(txtPath, animalNames)
 
 	dbName := ymlH.GetDbName(yamlPath)
 	dbName = strings.ToLower(dbName)
 	fmt.Printf("Our DB name is: %s\n", dbName)
 
 	dbInfo := configMap["Database"].(map[interface{}]interface{})
-	dbPointer := dbH.DbInit(dbInfo)
-	for _, parasiteInfo := range parasites {
-		dbH.AddToTable(dbPointer, dbName, parasiteInfo)
+	dbPointer := dbH.DbInit(dbInfo, animalNames)
+
+	for _, animal := range animalNames {
+		for _, parasiteInfo := range parasites[animal] {
+			dbH.AddToTable(dbPointer, animal, parasiteInfo)
+		}
 	}
 }
 

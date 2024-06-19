@@ -94,7 +94,7 @@ func ImagesToText(inputDir, pdfPath string) {
 	}
 }
 
-func SplitTextByAnimals(text string, animals []string) map[string]string {
+func splitTextByAnimals(text string, animals []string) map[string]string {
 	splittedText := map[string]string{}
 	pattern := ""
 
@@ -118,20 +118,30 @@ func SplitTextByAnimals(text string, animals []string) map[string]string {
 	return splittedText
 }
 
-func ExtractParasitesInfo(txtPath string) (output []ParasiteInfo) {
+func ExtractParasitesInfo(txtPath string, animals []string) map[string][]ParasiteInfo {
+	/*
+		The function returns a map with names of animals and a slice of parasites for each animal.
+	*/
+	// output := make(map[string][]ParasiteInfo)
+	output := map[string][]ParasiteInfo{}
 	txtBytes, err := os.ReadFile(txtPath)
 	if err != nil {
 		log.Fatalf("Failed to read txt document: %v\n", err)
 	}
 	txtString := string(txtBytes)
+
+	splittedByAnimals := splitTextByAnimals(txtString, animals)
+
 	pattern := `((.*\n*)*)Fig` // Catch one parasite. Prototype pattern, change in the future.
 	re := regexp.MustCompile(pattern)
-	matches := re.FindAllString(txtString, -1)
-	for _, match := range matches {
-		pInfo := ParasiteInfo{}
-		pInfo.Init()
-		processMatchInfo(&pInfo, match)
-		output = append(output, pInfo)
+	for _, animal := range animals {
+		matches := re.FindAllString(splittedByAnimals[animal], -1)
+		for _, match := range matches {
+			pInfo := ParasiteInfo{}
+			pInfo.Init()
+			processMatchInfo(&pInfo, match)
+			output[animal] = append(output[animal], pInfo)
+		}
 	}
 	return output
 }
