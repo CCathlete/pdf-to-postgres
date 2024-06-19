@@ -103,15 +103,17 @@ func splitTextByAnimals(text string, animals []string) map[string]string {
 			nextAnimal := animals[i+1]
 			// Note: for extra security it's better to use regexp.QuteMeta(animal).
 			// it makes sure to treat the animal names as raw strings with no special characters.
-			pattern = fmt.Sprintf(`(?s)%s.*?(?=%s|$)`, animal, nextAnimal)
+			pattern = fmt.Sprintf(`Parasites of %s(.*)Parsites of %s`, animal, nextAnimal)
 		} else {
 			// There is no next animal for the last animal.
-			pattern = fmt.Sprintf(`(?s)%s.*`, animal)
+			pattern = fmt.Sprintf(`Parasites of %s(.*)`, animal)
 		}
 		re := regexp.MustCompile(pattern)
-		match := re.FindString(text)
-		if match != "" {
-			splittedText[animal] = match
+		match := re.FindStringSubmatch(text)
+		if len(match) > 1 {
+			if match[1] != "" {
+				splittedText[animal] = match[1]
+			}
 		}
 	}
 

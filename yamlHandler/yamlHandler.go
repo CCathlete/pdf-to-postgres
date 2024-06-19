@@ -7,7 +7,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func ParseYaml(yamlPath string) map[string]interface{} {
+type Config struct {
+	DbInfo      map[interface{}]interface{} `yaml:"Database"`
+	AnimalNames []string                    `yaml:"Animal names"`
+}
+
+func ParseYaml(yamlPath string) Config {
 	file, err := os.OpenFile(yamlPath, os.O_RDONLY, 0644)
 	if err != nil {
 		log.Fatalf("Problem with opening the file in path %s: %v", yamlPath, err)
@@ -26,8 +31,8 @@ func ParseYaml(yamlPath string) map[string]interface{} {
 		log.Fatalf("Problem with reading the file in path %s: %v", yamlPath, err)
 	}
 	// Similar to make(map[string]interface{} but also initialises it)
-	configMap := map[string]interface{}{}
-	err = yaml.Unmarshal(dataBytes, configMap)
+	configMap := Config{}
+	err = yaml.Unmarshal(dataBytes, &configMap)
 	if err != nil {
 		log.Fatalf("Couldn't Unmarshal the yaml file in %s: %v", yamlPath, err)
 	}
@@ -37,7 +42,7 @@ func ParseYaml(yamlPath string) map[string]interface{} {
 
 func GetDbName(yamlPath string) string {
 	configInfoMap := ParseYaml(yamlPath)
-	dbInfoMap := configInfoMap["Database"].(map[interface{}]interface{})
+	dbInfoMap := configInfoMap.DbInfo
 	dbName := dbInfoMap["name"].(string)
 	return dbName
 }

@@ -13,6 +13,7 @@ import (
 func main() {
 	// docPath := "Parasitology/dummy_parasite.pdf"
 	docPath := "Parasitology/Parasitology_book.pdf"
+	configYml := ymlH.Config{}
 
 	// Checking if the text file already exists.
 	inputDirPath := "Parasitology/book_jpgs"
@@ -26,17 +27,17 @@ func main() {
 	}
 
 	yamlPath := "config.yaml"
-	configMap := ymlH.ParseYaml(yamlPath)
-	fmt.Printf("Our config is: %v\n", configMap)
+	configYml = ymlH.ParseYaml(yamlPath)
+	fmt.Printf("Our config is: %v\n", configYml)
 
-	animalNames := configMap["Animal names"].([]string)
+	animalNames := configYml.AnimalNames
 	parasites := pdf2txt.ExtractParasitesInfo(txtPath, animalNames)
 
 	dbName := ymlH.GetDbName(yamlPath)
 	dbName = strings.ToLower(dbName)
 	fmt.Printf("Our DB name is: %s\n", dbName)
 
-	dbInfo := configMap["Database"].(map[interface{}]interface{})
+	dbInfo := configYml.DbInfo
 	dbPointer := dbH.DbInit(dbInfo, animalNames)
 
 	for _, animal := range animalNames {
