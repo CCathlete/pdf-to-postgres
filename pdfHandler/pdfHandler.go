@@ -94,6 +94,30 @@ func ImagesToText(inputDir, pdfPath string) {
 	}
 }
 
+func SplitTextByAnimals(text string, animals []string) map[string]string {
+	splittedText := map[string]string{}
+	pattern := ""
+
+	for i, animal := range animals {
+		if i < len(animals)-1 {
+			nextAnimal := animals[i+1]
+			// Note: for extra security it's better to use regexp.QuteMeta(animal).
+			// it makes sure to treat the animal names as raw strings with no special characters.
+			pattern = fmt.Sprintf(`(?s)%s.*?(?=%s|$)`, animal, nextAnimal)
+		} else {
+			// There is no next animal for the last animal.
+			pattern = fmt.Sprintf(`(?s)%s.*`, animal)
+		}
+		re := regexp.MustCompile(pattern)
+		match := re.FindString(text)
+		if match != "" {
+			splittedText[animal] = match
+		}
+	}
+
+	return splittedText
+}
+
 func ExtractParasitesInfo(txtPath string) (output []ParasiteInfo) {
 	txtBytes, err := os.ReadFile(txtPath)
 	if err != nil {
