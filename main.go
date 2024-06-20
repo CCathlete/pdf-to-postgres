@@ -13,22 +13,22 @@ import (
 func main() {
 	// docPath := "Parasitology/dummy_parasite.pdf"
 	docPath := "Parasitology/Parasitology_book.pdf"
-	configYml := ymlH.Config{}
+	var configYml ymlH.Config
+	yamlPath := "config.yaml"
+	configYml = ymlH.ParseYaml(yamlPath)
+	fmt.Printf("Our config is: %v\n", configYml)
+	needProcessing := configYml.NeedProcessing
 
 	// Checking if the text file already exists.
 	inputDirPath := "Parasitology/book_jpgs"
 	txtPath := strings.Replace(docPath, "pdf", "txt", -1) // -1 means all instances.
 	if _, err := os.Stat(txtPath); errors.Is(err, os.ErrNotExist) {
 		// pdf2txt.ConvertToText(docPath, outputDirPath)
-		pdf2txt.ImagesToText(inputDirPath, docPath)
+		pdf2txt.ImagesToText(inputDirPath, docPath, needProcessing)
 		fmt.Println("PDF doc was converted to text at path: " + txtPath)
 	} else {
 		fmt.Println("The text file exists.")
 	}
-
-	yamlPath := "config.yaml"
-	configYml = ymlH.ParseYaml(yamlPath)
-	fmt.Printf("Our config is: %v\n", configYml)
 
 	animalNames := configYml.AnimalNames
 	parasites := pdf2txt.ExtractParasitesInfo(txtPath, animalNames)

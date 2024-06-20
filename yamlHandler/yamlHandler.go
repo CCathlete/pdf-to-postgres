@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	DbInfo      map[interface{}]interface{} `yaml:"Database"`
-	AnimalNames []string                    `yaml:"Animal names"`
+	DbInfo         map[interface{}]interface{} `yaml:"Database"`
+	AnimalNames    []string                    `yaml:"Animal names"`
+	NeedProcessing bool                        `yaml:"Need processing"`
 }
 
 func ParseYaml(yamlPath string) Config {
