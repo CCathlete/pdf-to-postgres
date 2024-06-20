@@ -15,6 +15,7 @@ import (
 	license "github.com/unidoc/unipdf/v3/common/license"
 	extractor "github.com/unidoc/unipdf/v3/extractor"
 	model "github.com/unidoc/unipdf/v3/model"
+	"gocv.io/x/gocv"
 )
 
 type ParasiteInfo map[string]string
@@ -38,6 +39,50 @@ func ConvertToTextWhenNotScanned(pdfPath string) {
 		fmt.Println(stdOutErr)
 		log.Fatalf("Failed to run pdftotext using the path %s, the error was: %v\n", pdfPath, err)
 	}
+}
+
+func ProcessImage(imagePath string) (outPath string) {
+	// Converting to grayscale.
+	image := gocv.IMRead(imagePath, gocv.IMReadGrayScale)
+	if image.Empty() {
+		fmt.Printf("Error when reading image %s\n", imagePath)
+		return ""
+	}
+	defer image.Close()
+
+	// Applying adaptive thresholding.
+	afterThresh := gocv.NewMat()
+	defer afterThresh.Close()
+	gocv.AdaptiveThreshold(
+		image,
+		&afterThresh,
+		255,
+		gocv.AdaptiveThresholdMean,
+		gocv.ThresholdBinary,
+		11,
+		2,
+	)
+
+	outDir := fmt.Sprintf("%s/AfterProcessing", filepath.Dir(imagePath))
+
+	// Creating the output dir if it doesn't exist.
+	// Note: I used isNotExists because it takes into account an empty file.
+	if err := os.Mkdir(outDir, 0755); os.IsNotExist(err) {
+		// If the dir doesn't exist but we still got an error.
+		fmt.Printf("Error when trying to create the output dir even"+
+			"though it doesn't already exist: %v.\n", err)
+	}
+
+	// Saving the processed image.
+	outPath = fmt.Sprintf("%s/Processed_%s", outDir, filepath.Base(imagePath))
+
+	if imageWasWritten := gocv.IMWrite(outPath, afterThresh); !imageWasWritten {
+		fmt.Printf("Error when writing the processed image: %s\n", outPath)
+		return ""
+	}
+
+	fmt.Printf("Successfully processed and saved the image to: %s\n", outPath)
+	return outPath
 }
 
 func runTesseractOCR(imagepath string) string {
@@ -68,9 +113,12 @@ func ImagesToText(inputDir, pdfPath string) {
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".jpg" || filepath.Ext(file.Name()) == ".jpeg" {
 			imagePath := filepath.Join(inputDir, file.Name())
-			fmt.Printf("Using tesseract on image %s.\n", imagePath)
+			fmt.Printf("Processing image %s.\n", imagePath)
+			processedImagePath := ProcessImage(imagePath)
 
-			text := runTesseractOCR(imagePath)
+			fmt.Printf("Using tesseract on image %s.\n", processedImagePath)
+
+			text := runTesseractOCR(processedImagePath)
 
 			// Adding the text to the txt file.
 			txtPath := strings.Replace(pdfPath, "pdf", "txt", -1) // -1 means all instances.
