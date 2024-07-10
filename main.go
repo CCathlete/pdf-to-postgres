@@ -12,7 +12,7 @@ import (
 
 func main() {
 	// docPath := "Parasitology/dummy_parasite.pdf"
-	docPath := "Parasitology/Parasitology_book.pdf"
+	docPath := "Parasitology/Parasitology_book_2.pdf"
 	var configYml ymlH.Config
 	yamlPath := "config.yaml"
 	configYml = ymlH.ParseYaml(yamlPath)
@@ -23,7 +23,7 @@ func main() {
 	inputDirPath := "Parasitology/book_jpgs"
 	txtPath := strings.Replace(docPath, "pdf", "txt", -1) // -1 means all instances.
 	if _, err := os.Stat(txtPath); errors.Is(err, os.ErrNotExist) {
-		// pdf2txt.ConvertToText(docPath, outputDirPath)
+		pdf2txt.ConvertToTextWhenNotScanned(docPath)
 		pdf2txt.ImagesToText(inputDirPath, docPath, needProcessing)
 		fmt.Println("PDF doc was converted to text at path: " + txtPath)
 	} else {

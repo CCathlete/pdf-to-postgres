@@ -10,7 +10,7 @@ Animal names:
   - Pigs
   - Dogs
   - Cats
-  - Cattle, Sheep and Goats
+  # - Cattle, Sheep and Goats
   - Llamas
   - Horses
   - Birds
@@ -21,4 +21,4 @@ Animal names:
   - Reptiles
   - Humans
 
-Need processing: true
+Need processing: false
